@@ -4,23 +4,13 @@
  * @param _product карточка товара
  * @returns {number}
  */
-function calculateSimpleRevenue(purchase, _product) {
-  // @TODO: Расчет прибыли от операции
-
-  const { discount, sale_price, quantity } = purchase;
-
-  // 1. Преобразуем скидку из процентов в коэффициент (7.5% → 0.075)
-  const discountCoefficient = discount / 100;
-
-  // 2. Рассчитываем цену с учётом скидки
-  const discountedPrice = sale_price * (1 - discountCoefficient);
-
-  // 3. Вычисляем общую выручку по позиции
-  const revenue = discountedPrice * quantity;
-
-  // 4. Округляем до 2 знаков (копейки)
-  return Math.round(revenue * 100) / 100;
-}
+function calculateSimpleRevenue(purchase) {
+    const { discount, sale_price, quantity } = purchase;
+    const discountCoefficient = discount / 100;
+    const discountedPrice = sale_price * (1 - discountCoefficient);
+    const revenue = discountedPrice * quantity;
+    return Math.round(revenue * 100) / 100;
+  }
 
 /**
  * Функция для расчета бонусов
@@ -126,6 +116,9 @@ function analyzeSalesData(data, options) {
         if (!Array.isArray(data[collection])) {
             throw new Error(`Некорректная структура данных: отсутствует или неверный формат ${collection}`);
         }
+        if (data[collection].length === 0) {
+            throw new Error(`Пустой массив: ${collection}`);
+        }
     }
 
     // 2. Создаём индексы
@@ -186,15 +179,15 @@ function analyzeSalesData(data, options) {
         return {
             seller_id: seller.id,
             name: seller.name,
-            revenue: Math.round(seller.revenue),
-            profit: Math.round(seller.profit),
+            revenue: Math.round(seller.revenue * 100) / 100,
+            profit: Math.round(seller.profit * 100) / 100,
             sales_count: seller.sales_count,
             top_products: topProducts,
             bonus: Math.round(options.calculateBonus(
                 index, 
                 sortedSellers.length, 
                 seller
-            ))
+            ) * 100) / 100
         };
     });
 }
