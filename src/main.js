@@ -9,9 +9,9 @@ function calculateSimpleRevenue(purchase) {
     const discountCoefficient = discount / 100;
     const discountedPrice = sale_price * (1 - discountCoefficient);
     const revenue = discountedPrice * quantity;
-    return revenue; // Убрано промежуточное округление
+    // Округляем до 2 знаков после запятой, чтобы избежать накопления ошибок
+    return parseFloat(revenue.toFixed(2));
 }
-
 /**
  * Функция для расчета бонусов
  * @param index порядковый номер в отсортированном массиве
