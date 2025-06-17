@@ -9,7 +9,8 @@ function calculateSimpleRevenue(purchase) {
     const discountCoefficient = discount / 100;
     const discountedPrice = sale_price * (1 - discountCoefficient);
     const revenue = discountedPrice * quantity;
-    return Math.round(revenue * 100) / 100;
+    // Округляем до 6 знаков для минимизации ошибок, финальное округление будет в analyzeSalesData
+    return Math.round(revenue * 1000000) / 1000000;
   }
 
 /**
@@ -20,25 +21,21 @@ function calculateSimpleRevenue(purchase) {
  * @returns {number}
  */
 function calculateBonusByProfit(index, total, seller) {
-  const { profit } = seller;
-
-  // Проверка на последнее место
-  if (index === total - 1) return 0;
-
-  // Определяем процент бонуса
-  let bonusPercentage;
-  if (index === 0) {
-    bonusPercentage = 0.15; // 15% для первого места
-  } else if (index <= 2) {
-    bonusPercentage = 0.1; // 10% для второго и третьего места
-  } else {
-    bonusPercentage = 0.05; // 5% для остальных
+    const { profit } = seller;
+    if (index === total - 1) return 0;
+    
+    let bonusPercentage;
+    if (index === 0) {
+      bonusPercentage = 0.15;
+    } else if (index <= 2) {
+      bonusPercentage = 0.1;
+    } else {
+      bonusPercentage = 0.05;
+    }
+    
+    // Округляем промежуточный результат
+    return parseFloat((profit * bonusPercentage).toFixed(6));
   }
-
-  // Рассчитываем бонус
-  return profit * bonusPercentage;
-  // @TODO: Расчет бонуса от позиции в рейтинге
-}
 
 /**
  * Функция для анализа данных продаж
@@ -46,56 +43,6 @@ function calculateBonusByProfit(index, total, seller) {
  * @param options
  * @returns {{revenue, top_products, bonus, name, sales_count, profit, seller_id}[]}
  
-
-// function analyzeSalesData(data, options) {
-//   // @TODO: Проверка входных данных
-
-//   // @TODO: Проверка наличия опций
-
-//   // @TODO: Подготовка промежуточных данных для сбора статистики
-
-//   // @TODO: Индексация продавцов и товаров для быстрого доступа
-
-//   // @TODO: Расчет выручки и прибыли для каждого продавца
-//   // Обработка каждой покупки
-//   data.purchase_records.forEach(purchase => {
-//     const seller = sellersMap[purchase.seller_id];
-//     if (!seller) return;
-    
-//     purchase.items.forEach(item => {
-//         const product = data.products.find(p => p.sku === item.sku);
-        
-//         // Расчёт выручки
-//         const itemRevenue = options.calculateRevenue(item, product);
-//         seller.revenue += itemRevenue;
-        
-//         // Расчёт прибыли (если есть данные о товаре)
-//         if (product) {
-//             const itemCost = product.purchase_price * item.quantity;
-//             seller.profit += (itemRevenue - itemCost);
-//         }
-//     });
-// });
-
-//   // @TODO: Сортировка продавцов по прибыли
-//   // ... (предыдущий код остаётся без изменений до сортировки)
-
-//   // Сортируем продавцов по убыванию прибыли
-//   result.sort((a, b) => b.profit - a.profit);
-
-//   // Назначаем бонусы с учётом рейтинга
-//   result.forEach((seller, index) => {
-//     seller.bonus = Math.round(
-//       options.calculateBonus(index, result.length, seller)
-//     );
-//   });
-
-//   return result;
-
-//   // @TODO: Назначение премий на основе ранжирования
-
-//   // @TODO: Подготовка итоговой коллекции с нужными полями
-// }
 
 // /**
 //  * Анализирует данные о продажах и формирует отчёт по продавцам
@@ -172,22 +119,22 @@ function analyzeSalesData(data, options) {
     return sortedSellers.map((seller, index) => {
         // Получаем топ-10 товаров
         const topProducts = Object.entries(seller.products_sold)
-            .sort((a, b) => b[1] - a[1]) // Сортировка по количеству
+            .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
             .map(([sku, quantity]) => ({ sku, quantity }));
+
+        // Рассчитываем бонус с промежуточным округлением
+        const rawBonus = options.calculateBonus(index, sortedSellers.length, seller);
+        const bonus = Math.round(rawBonus * 100) / 100;
 
         return {
             seller_id: seller.id,
             name: seller.name,
-            revenue: Math.round(seller.revenue * 100) / 100,
-            profit: Math.round(seller.profit * 100) / 100,
+            revenue: parseFloat(seller.revenue.toFixed(2)),
+            profit: parseFloat(seller.profit.toFixed(2)),
             sales_count: seller.sales_count,
             top_products: topProducts,
-            bonus: Math.round(options.calculateBonus(
-                index, 
-                sortedSellers.length, 
-                seller
-            ) * 100) / 100
+            bonus: bonus
         };
     });
 }
