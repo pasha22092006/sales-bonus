@@ -9,9 +9,8 @@ function calculateSimpleRevenue(purchase) {
     const discountCoefficient = discount / 100;
     const discountedPrice = sale_price * (1 - discountCoefficient);
     const revenue = discountedPrice * quantity;
-    // Округляем до 6 знаков для минимизации ошибок, финальное округление будет в analyzeSalesData
-    return Math.round(revenue * 1000000) / 1000000;
-  }
+    return revenue; // Убрано промежуточное округление
+}
 
 /**
  * Функция для расчета бонусов
@@ -130,7 +129,7 @@ function analyzeSalesData(data, options) {
         return {
             seller_id: seller.id,
             name: seller.name,
-            revenue: parseFloat(seller.revenue.toFixed(2)),
+            revenue: parseFloat(seller.revenue.toFixed(2)), // Округление до 2 знаков
             profit: parseFloat(seller.profit.toFixed(2)),
             sales_count: seller.sales_count,
             top_products: topProducts,
